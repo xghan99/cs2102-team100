@@ -1,5 +1,40 @@
 /* ----- TRIGGERS     ----- */
 
+/* Trigger 2 */
+CREATE OR REPLACE FUNCTION check_amount()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.amount < (SELECT min_amt FROM Rewards WHERE name = NEW.name AND id = NEW.id)) THEN
+  RETURN NULL;
+  ELSE
+  RETURN NEW;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER block_pledge
+BEFORE INSERT ON Backs
+FOR EACH ROW EXECUTE FUNCTION check_amount();
+
+/* Trigger 5 */
+CREATE OR REPLACE FUNCTION check_backing_date()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.backing <= (SELECT deadline FROM Projects WHERE id = NEW.id) AND NEW.backing > (SELECT created FROM Projects WHERE id = NEW.id)) THEN
+  RETURN NEW;
+  ELSE
+  RETURN NULL;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER bef_deadline
+BEFORE INSERT ON Backs
+FOR EACH ROW EXECUTE FUNCTION check_backing_date();
 
 /* ------------------------ */
 
@@ -71,9 +106,28 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION find_superbackers(
   today DATE
 ) RETURNS TABLE(email TEXT, name TEXT) AS $$
--- add declaration here
 BEGIN
-  -- your code here
+  RETURN QUERY
+  WITH successful_projs AS
+  (SELECT p.id
+  FROM Projects p, Backs b
+  WHERE p.id = b.id AND deadline<today AND deadline>=today-30
+  GROUP BY p.id
+  HAVING SUM(b.amount)>=p.goal),
+  superbackers AS
+  (SELECT r.email
+  FROM Backers r
+  WHERE (SELECT COUNT(id) FROM Backs b WHERE b.email = r.email AND id in (SELECT * FROM successful_projs)) >= 5 AND (SELECT COUNT(DISTINCT p.ptype) FROM Projects p, Backs b WHERE p.id = b.id AND b.email = r.email AND
+  p.id in (SELECT * FROM successful_projs))>=3 AND EXISTS (SELECT 1 FROM Verifies v WHERE v.email = r.email AND verified<=today)
+  UNION
+  SELECT r.email
+  FROM Backers r
+  WHERE (SELECT SUM(amount) FROM Backs b WHERE b.email = r.email AND id in (SELECT * FROM successful_projs)) >= 1500 AND EXISTS
+  (SELECT 1 FROM Verifies v WHERE v.email = r.email AND verified <=today) AND NOT EXISTS (SELECT 1 FROM Backs b WHERE b.email = r.email AND b.request>=today-30 AND b.request <= today))
+  SELECT u.email, u.name
+  FROM Users u
+  WHERE EXISTS (SELECT 1 FROM superbackers s WHERE s.email = u.email)
+  ORDER BY u.email;
 END;
 $$ LANGUAGE plpgsql;
 
