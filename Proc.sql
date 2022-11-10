@@ -10,7 +10,7 @@ BEGIN
       email NOT IN (SELECT email FROM Backers) AND
       email NOT IN (SELECT email FROM Creators)
     ) > 0) THEN
-  RETURN NULL;
+  RAISE EXCEPTION 'There exists a user who is neither a backer nor a creator';
   ELSE
   RETURN NEW;
   END IF;
@@ -50,7 +50,7 @@ BEGIN
   IF ((SELECT COUNT(*)
     FROM Projects
     WHERE id NOT IN (SELECT id FROM Rewards)) > 0) THEN
-  RETURN NULL;
+  RAISE EXCEPTION 'There exists a project without any reward levels';
   ELSE
   RETURN NEW;
   END IF;
