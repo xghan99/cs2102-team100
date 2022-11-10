@@ -64,6 +64,34 @@ BEFORE INSERT ON Projects
 FOR EACH ROW EXECUTE FUNCTION check_project();
 
 
+/* Trigger 4 */
+CREATE OR REPLACE FUNCTION check_deadline()
+RETURNS TRIGGER AS $$
+DECLARE
+  r RECORD;
+BEGIN
+  SELECT *
+    INTO r
+    FROM Backs, Projects 
+      WHERE Backs.id = Projects.id
+      AND New.email = Backs.email AND New.pid = Backs.id;
+  IF (r.request IS NULL) THEN
+    RETURN NULL;
+  ELSIF (New.accepted = TRUE AND 90 < r.request - r.deadline) THEN
+    RETURN NULL;
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER block_approval
+BEFORE INSERT ON Refunds
+FOR EACH ROW EXECUTE FUNCTION check_deadline();
+
+
 /* Trigger 5 */
 CREATE OR REPLACE FUNCTION check_backing_date()
 RETURNS TRIGGER AS $$
@@ -82,13 +110,36 @@ CREATE TRIGGER bef_deadline
 BEFORE INSERT ON Backs
 FOR EACH ROW EXECUTE FUNCTION check_backing_date();
 
+
+/* Trigger 6 */
+CREATE OR REPLACE FUNCTION check_request()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (SELECT (SUM(B.amount) >= P.goal) IS NOT NULL AND (SUM(B.amount) >= P.goal) IS TRUE
+    FROM Projects P, Backs B
+    WHERE B.id = P.id
+      AND P.id = New.id
+      AND New.request > P.deadline
+    GROUP BY P.id) THEN
+    RETURN NEW;
+  ELSE
+    RETURN NULL;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER block_request
+BEFORE UPDATE ON Backs
+FOR EACH ROW EXECUTE FUNCTION check_request();
+
 /* ------------------------ */
 
 
 
 
-
 /* ----- PROECEDURES  ----- */
+
 /* Procedure #1 */
 CREATE OR REPLACE PROCEDURE add_user(
   email TEXT, name    TEXT, cc1  TEXT,
@@ -111,7 +162,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 /* Procedure #2 */
 CREATE OR REPLACE PROCEDURE add_project(
   id      INT,     email TEXT,   ptype    TEXT,
@@ -128,7 +178,6 @@ BEGIN
   END IF;
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 /* Procedure #3 */
@@ -154,13 +203,14 @@ BEGIN
   CLOSE curs;
 END;
 $$ LANGUAGE plpgsql;
+
 /* ------------------------ */
 
 
 
 
-
 /* ----- FUNCTIONS    ----- */
+
 /* Function #1  */
 CREATE OR REPLACE FUNCTION find_superbackers(
   today DATE
@@ -191,7 +241,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 /* Function #2  */
 CREATE OR REPLACE FUNCTION find_top_success(
   n INT, today DATE, projectType TEXT
@@ -209,15 +258,54 @@ CREATE OR REPLACE FUNCTION find_top_success(
 $$ LANGUAGE sql;
 
 
-
 /* Function #3  */
+CREATE OR REPLACE FUNCTION projects_with_days()
+RETURNS TABLE(id INT, name TEXT, type TEXT, email TEXT, created DATE, days INT) AS $$
+DECLARE
+  curs CURSOR FOR (
+    SELECT P.id, P.email, P.ptype, P.created, P.name, goal, backing, amount
+    FROM Projects P, Backs B
+    WHERE P.id = B.id
+    ORDER BY P.id, B.backing
+  );
+  r RECORD; curr_id INT; cum_sum INT; added BOOLEAN;
+BEGIN
+  curr_id = -1; cum_sum = 0; added = FALSE; OPEN curs;
+  LOOP
+    FETCH curs INTO r;
+    EXIT WHEN NOT FOUND;
+    IF (r.id <> curr_id) THEN
+      curr_id := r.id; cum_sum := 0; added := FALSE;
+    END IF;
+    IF (added = FALSE) THEN
+      cum_sum := cum_sum + r.amount;
+      IF (cum_sum >= r.goal) THEN
+        id := curr_id; name := r.name; type := r.ptype; email := r.email; created := r.created; days := r.backing - r.created;
+        added := TRUE;
+        RETURN NEXT;
+      END IF;
+    END IF;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION find_top_popular(
   n INT, today DATE, ptype TEXT
 ) RETURNS TABLE(id INT, name TEXT, email TEXT,
                 days INT) AS $$
--- add declaration here
 BEGIN
-  -- your code here
+  RETURN QUERY
+  WITH T1 AS (SELECT P.id, P.name, P.email, P.days
+  FROM projects_with_days() as P
+  WHERE P.created < today
+    AND P.type = ptype
+  ORDER BY days
+  LIMIT n)
+  SELECT *
+  FROM T1
+  ORDER BY days DESC, id;
 END;
 $$ LANGUAGE plpgsql;
+
 /* ------------------------ */
