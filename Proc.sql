@@ -268,19 +268,19 @@ DECLARE
     WHERE P.id = B.id
     ORDER BY P.id, B.backing
   );
-  r RECORD; curr_id INT; cum_sum INT; added BOOLEAN;
+  r RECORD; prev_id INT; cum_sum INT; added BOOLEAN;
 BEGIN
-  curr_id = -1; cum_sum = 0; added = FALSE; OPEN curs;
+  prev_id = -1; cum_sum = 0; added = FALSE; OPEN curs;
   LOOP
     FETCH curs INTO r;
     EXIT WHEN NOT FOUND;
-    IF (r.id <> curr_id) THEN
-      curr_id := r.id; cum_sum := 0; added := FALSE;
+    IF (r.id <> prev_id) THEN
+      prev_id := r.id; cum_sum := 0; added := FALSE;
     END IF;
     IF (added = FALSE) THEN
       cum_sum := cum_sum + r.amount;
       IF (cum_sum >= r.goal) THEN
-        id := curr_id; name := r.name; type := r.ptype; email := r.email; created := r.created; days := r.backing - r.created;
+        id := prev_id; name := r.name; type := r.ptype; email := r.email; created := r.created; days := r.backing - r.created;
         added := TRUE;
         RETURN NEXT;
       END IF;
