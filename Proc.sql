@@ -4,8 +4,12 @@
 CREATE OR REPLACE FUNCTION check_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF (NEW.email NOT IN (SELECT email FROM Backers) OR
-    NEW.email NOT IN (SELECT email FROM Creators)) THEN
+  IF ((SELECT COUNT(*)
+    FROM Users
+    WHERE
+      email NOT IN (SELECT email FROM Backers) AND
+      email NOT IN (SELECT email FROM Creators)
+    ) > 0) THEN
   RETURN NULL;
   ELSE
   RETURN NEW;
@@ -16,7 +20,7 @@ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER block_user
-AFTER INSERT ON Users
+BEFORE INSERT ON Users
 FOR EACH ROW EXECUTE FUNCTION check_user();
 
 
@@ -43,7 +47,9 @@ FOR EACH ROW EXECUTE FUNCTION check_amount();
 CREATE OR REPLACE FUNCTION check_project()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF ((SELECT COUNT(*) FROM Rewards WHERE id = NEW.id) = 0) THEN
+  IF ((SELECT COUNT(*)
+    FROM Projects
+    WHERE id NOT IN (SELECT id FROM Rewards)) > 0) THEN
   RETURN NULL;
   ELSE
   RETURN NEW;
@@ -54,7 +60,7 @@ LANGUAGE plpgsql;
 
 
 CREATE TRIGGER block_project
-AFTER INSERT ON Projects
+BEFORE INSERT ON Projects
 FOR EACH ROW EXECUTE FUNCTION check_project();
 
 
@@ -114,10 +120,12 @@ CREATE OR REPLACE PROCEDURE add_project(
   amounts NUMERIC[]
 ) AS $$
 BEGIN
-  INSERT INTO Projects
-    VALUES (id, email, ptype, created, name, deadline, goal);
-  INSERT INTO Rewards
-    (SELECT r.n, id, r.a FROM UNNEST(names, amounts) AS r(n, a)); 
+  IF ((SELECT COUNT(*) FROM UNNEST(names, amounts)) > 0) THEN
+    INSERT INTO Projects
+      VALUES (id, email, ptype, created, name, deadline, goal);
+    INSERT INTO Rewards
+      (SELECT r.n, id, r.a FROM UNNEST(names, amounts) AS r(n, a));
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 
