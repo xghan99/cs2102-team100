@@ -1,5 +1,25 @@
 /* ----- TRIGGERS     ----- */
 
+/* Trigger 1 */
+CREATE OR REPLACE FUNCTION check_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (NEW.email NOT IN (SELECT email FROM Backers) OR
+    NEW.email NOT IN (SELECT email FROM Creators)) THEN
+  RETURN NULL;
+  ELSE
+  RETURN NEW;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER block_user
+AFTER INSERT ON Users
+FOR EACH ROW EXECUTE FUNCTION check_user();
+
+
 /* Trigger 2 */
 CREATE OR REPLACE FUNCTION check_amount()
 RETURNS TRIGGER AS $$
@@ -17,6 +37,26 @@ LANGUAGE plpgsql;
 CREATE TRIGGER block_pledge
 BEFORE INSERT ON Backs
 FOR EACH ROW EXECUTE FUNCTION check_amount();
+
+
+/* Trigger 3 */
+CREATE OR REPLACE FUNCTION check_project()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF ((SELECT COUNT(*) FROM Rewards WHERE id = NEW.id) = 0) THEN
+  RETURN NULL;
+  ELSE
+  RETURN NEW;
+  END IF;
+END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE TRIGGER block_project
+AFTER INSERT ON Projects
+FOR EACH ROW EXECUTE FUNCTION check_project();
+
 
 /* Trigger 5 */
 CREATE OR REPLACE FUNCTION check_backing_date()
@@ -49,9 +89,18 @@ CREATE OR REPLACE PROCEDURE add_user(
   cc2   TEXT, street  TEXT, num  TEXT,
   zip   TEXT, country TEXT, kind TEXT
 ) AS $$
--- add declaration here
 BEGIN
-  -- your code here
+  IF kind = 'BACKER' THEN
+    INSERT INTO Users VALUES (email, name, cc1, cc2);
+    INSERT INTO Backers VALUES (email, street, num, zip, country);
+  ELSEIF kind = 'CREATOR' THEN
+    INSERT INTO Users VALUES (email, name, cc1, cc2);
+    INSERT INTO Creators VALUES (email, country);
+  ELSEIF kind = 'BOTH' THEN
+    INSERT INTO Users VALUES (email, name, cc1, cc2);
+    INSERT INTO Backers VALUES (email, street, num, zip, country);
+    INSERT INTO Creators VALUES (email, country);
+  END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -64,9 +113,11 @@ CREATE OR REPLACE PROCEDURE add_project(
   goal    NUMERIC, names TEXT[],
   amounts NUMERIC[]
 ) AS $$
--- add declaration here
 BEGIN
-  -- your code here
+  INSERT INTO Projects
+    VALUES (id, email, ptype, created, name, deadline, goal);
+  INSERT INTO Rewards
+    (SELECT r.n, id, r.a FROM UNNEST(names, amounts) AS r(n, a)); 
 END;
 $$ LANGUAGE plpgsql;
 
