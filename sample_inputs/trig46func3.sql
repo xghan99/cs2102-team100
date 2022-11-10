@@ -63,6 +63,7 @@ INSERT INTO ProjectTypes VALUES ('E', 4);
 INSERT INTO Projects VALUES (0, '11@gmail.com', 'A', '2022-01-01', 'zero_project', '2023-01-01', 50000);
 INSERT INTO Projects VALUES (1, '12@gmail.com', 'A', '2022-01-15', 'one_project', '2023-01-15', 40000);
 INSERT INTO Projects VALUES (2, '13@gmail.com', 'A', '2022-02-01', 'two_project', '2023-02-01', 30000);
+INSERT INTO Projects VALUES (3, '13@gmail.com', 'A', '2022-01-01', 'three_project', '2023-01-01', 60000);
 
 -- Rewards Table
 INSERT INTO Rewards VALUES ('Gold', 0, 10000);
@@ -76,6 +77,8 @@ INSERT INTO Rewards VALUES ('Bronze', 1, 1000);
 INSERT INTO Rewards VALUES ('Gold', 2, 10000);
 INSERT INTO Rewards VALUES ('Silver', 2, 5000);
 INSERT INTO Rewards VALUES ('Bronze', 2, 1000);
+
+INSERT INTO Rewards VALUES ('Gold', 3, 1);
 
 
 -- Backs Table
@@ -115,7 +118,8 @@ INSERT INTO Backs VALUES ('07@gmail.com', 'Gold', 1, '2022-04-15', NULL, 10000);
 INSERT INTO Backs VALUES ('08@gmail.com', 'Silver', 1, '2022-05-01', NULL, 5500); -- 42500: exceeds goal of 40000 at 106 days
 
 -- Trigger 6 Test 
-UPDATE Backs SET request = '2023-04-15' WHERE email = '09@gmail.com' AND id = 1; -- success expected; project is successful (funding met and deadline passed + 90 days)
+UPDATE Backs SET request = '2023-04-15' WHERE email = '08@gmail.com' AND id = 1; -- success expected; project is successful (funding met and deadline passed + 90 days)
+UPDATE Backs SET request = '2023-04-15' WHERE email = '09@gmail.com' AND id = 1; -- failure expected; have not backed the project
 
 INSERT INTO Backs VALUES ('09@gmail.com', 'Bronze', 1, '2022-05-15', NULL, 4000); -- 46500
 INSERT INTO Backs VALUES ('10@gmail.com', 'Gold', 1, '2022-06-01', NULL, 20000);  -- 66500
@@ -141,10 +145,25 @@ INSERT INTO Refunds VALUES ('01@gmail.com', 0, 0, '2024-01-01', FALSE); -- no re
 INSERT INTO Refunds VALUES ('10@gmail.com', 0, 0, '2024-01-01', TRUE);  -- 91 days past deadline; refund accept unsuccessful
 INSERT INTO Refunds VALUES ('10@gmail.com', 0, 0, '2024-01-01', FALSE); -- 91 days past deadline; refund reject successful
 INSERT INTO Refunds VALUES ('09@gmail.com', 0, 0, '2024-01-01', TRUE);  -- 90 days past deadline; refund accept successful
-INSERT INTO Refunds VALUES ('09@gmail.com', 1, 0, '2024-01-01', FALSE); -- 90 days past deadline; refund reject successful
+INSERT INTO Refunds VALUES ('08@gmail.com', 1, 0, '2024-01-01', FALSE); -- 90 days past deadline; refund reject successful
+INSERT INTO Refunds VALUES ('09@gmail.com', 1, 0, '2024-01-01', FALSE); -- no refund request; refund reject unsuccessful
+
+-- Project 3
+INSERT INTO Backs VALUES ('03@gmail.com', 'Gold', 3, '2022-04-17', NULL, 60002); -- reach goal at exactly 106 days after creation
 
 
 -- Function 3 Test
+SELECT * FROM find_top_popular(4, '2026-01-01', 'A');
+-- expected result: 
+--  id |     name      |    email     | days 
+-- ----+---------------+--------------+------
+--   1 | one_project   | 12@gmail.com |  106
+--   3 | three_project | 13@gmail.com |  106
+--   0 | zero_project  | 11@gmail.com |  104
+--   2 | two_project   | 13@gmail.com |   59
+--
+-- (top four popular projects sorted in descending order of days and ascending order of id)
+
 SELECT * FROM find_top_popular(3, '2026-01-01', 'A');
 -- expected result: 
 --  id |     name     |    email     | days 
