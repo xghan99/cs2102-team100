@@ -31,9 +31,15 @@ CALL add_user('18@gmail.com', '18name', 'cc18', NULL, '18street', '18num', '18zi
 CALL add_user('19@gmail.com', '19name', 'cc19', NULL, '19street', '19num', '19zip', 'SG', 'BOTH');
 CALL add_user('20@gmail.com', '20name', 'cc20', NULL, '20street', '20num', '20zip', 'SG', 'BOTH');
 
--- Fire trigger?
---INSERT INTO Users VALUES ('trig@gmail.com', 'trigname', 'cctr', NULL);
---CALL add_user('21@gmail.com', '21name', 'cc21', NULL, '21street', '21num', '21zip', 'SG', 'BOTH');
+-- Test Trigger 1
+INSERT INTO Users VALUES ('trig@gmail.com', 'trigname', 'cctr', NULL);
+CALL add_user('21@gmail.com', '21name', 'cc21', NULL, '21street', '21num', '21zip', 'SG', 'BOTH');
+-- unsuccessful, must add trigname to Backers and/or Creators as well
+INSERT INTO Users VALUES ('trig2@gmail.com', 'trigname2', 'cctr2', NULL);
+-- unsuccessful, must add trigname to Backers and/or Creators as well
+DELETE FROM Users WHERE email = 'trig@gmail.com';
+CALL add_user('21@gmail.com', '21name', 'cc21', NULL, '21street', '21num', '21zip', 'SG', 'BOTH');
+-- should work again
 
 -- Invalid project
 CALL add_project(11, '17@gmail.com', 'testtype', '2021-01-01', 'Project 01', '2022-12-31', 1000, ARRAY[]::TEXT[], ARRAY[]::NUMERIC[]);
@@ -46,6 +52,12 @@ CALL add_project(1, '11@gmail.com', 'testtype', '2021-01-01', 'Project 01', '202
 CALL add_project(2, '12@gmail.com', 'testtype', '2021-01-01', 'Project 02', '2022-12-31', 1000, ARRAY['Silver', 'Trash'], ARRAY[10, 2]);
 CALL add_project(3, '12@gmail.com', 'testtype', '2021-01-01', 'Project 03', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
 
--- Fire trigger?
---INSERT INTO Projects VALUES (0, '10@gmail.com', 'A', '2023-10-23', 'zero_project', '2024-06-30', 50000);
---CALL add_project(4, '13@gmail.com', 'testtype', '2021-01-01', 'Project 04', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+-- Test Trigger 3
+INSERT INTO Projects VALUES (0, '10@gmail.com', 'testtype', '2023-10-23', 'zero_project', '2024-06-30', 50000);
+CALL add_project(4, '13@gmail.com', 'testtype', '2021-01-01', 'Project 04', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+-- unsuccessful, must add reward level to project 0
+INSERT INTO Projects VALUES (4, '10@gmail.com', 'testtype', '2023-10-23', 'four_project', '2024-06-30', 50000);
+-- unsuccessful, must add reward level to project 0
+DELETE FROM Projects WHERE id = 0;
+CALL add_project(5, '12@gmail.com', 'testtype', '2021-01-01', 'Project 05', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+-- should work again
