@@ -300,11 +300,11 @@ BEGIN
   FROM projects_with_days() as P
   WHERE P.created < today
     AND P.type = ptype
-  ORDER BY days
+  ORDER BY days, P.id -- technically not necessary but for correctness of definition
   LIMIT n)
   SELECT *
   FROM T1
-  ORDER BY days DESC, id;
+  ORDER BY days DESC, id DESC;
 END;
 $$ LANGUAGE plpgsql;
 
