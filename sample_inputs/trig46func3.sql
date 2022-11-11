@@ -157,31 +157,31 @@ SELECT * FROM find_top_popular(4, '2026-01-01', 'A');
 -- expected result: 
 --  id |     name      |    email     | days 
 -- ----+---------------+--------------+------
+--   2 | two_project   | 13@gmail.com |   59
+--   0 | zero_project  | 11@gmail.com |  104
 --   1 | one_project   | 12@gmail.com |  106
 --   3 | three_project | 13@gmail.com |  106
---   0 | zero_project  | 11@gmail.com |  104
---   2 | two_project   | 13@gmail.com |   59
 --
--- (top four popular projects sorted in descending order of days and ascending order of id)
+-- (top four popular projects sorted in ascending order of days and ascending order of id)
 
 SELECT * FROM find_top_popular(3, '2026-01-01', 'A');
 -- expected result: 
 --  id |     name     |    email     | days 
 -- ----+--------------+--------------+------
---   1 | one_project  | 12@gmail.com |  106
---   0 | zero_project | 11@gmail.com |  104
 --   2 | two_project  | 13@gmail.com |   59
+--   0 | zero_project | 11@gmail.com |  104
+--   1 | one_project  | 12@gmail.com |  106
 --
--- (top three popular projects sorted in descending order of days and ascending order of id)
+-- (top three popular projects sorted in ascending order of days and ascending order of id)
 
 SELECT * FROM find_top_popular(2, '2026-01-01', 'A');
 -- expected result: 
 --  id |     name     |    email     | days 
 -- ----+--------------+--------------+------
---   0 | zero_project | 11@gmail.com |  104
 --   2 | two_project  | 13@gmail.com |   59
+--   0 | zero_project | 11@gmail.com |  104
 --
--- (top two popular projects sorted in descending order of days and ascending order of id)
+-- (top two popular projects sorted in ascending order of days and ascending order of id)
 
 SELECT * FROM find_top_popular(3, '2022-01-01', 'A');
 -- expected result: 
@@ -192,12 +192,13 @@ SELECT * FROM find_top_popular(3, '2022-01-01', 'A');
 
 SELECT * FROM find_top_popular(3, '2022-01-16', 'A');
 -- expected result: 
---  id |     name     |    email     | days 
--- ----+--------------+--------------+------
---   1 | one_project  | 12@gmail.com |  106
---   0 | zero_project | 11@gmail.com |  104
+--  id |     name      |    email     | days 
+-- ----+---------------+--------------+------
+--   0 | zero_project  | 11@gmail.com |  104
+--   1 | one_project   | 12@gmail.com |  106
+--   3 | three_project | 13@gmail.com |  106
 --
--- (Project 0 and Project 1 created before 2022-01-16)
+-- (Project 0, 1, 3 created before 2022-01-16)
 
 SELECT * FROM find_top_popular(3, '2026-01-01', 'B');
 -- expected result: 
