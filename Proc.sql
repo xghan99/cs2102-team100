@@ -296,15 +296,12 @@ CREATE OR REPLACE FUNCTION find_top_popular(
                 days INT) AS $$
 BEGIN
   RETURN QUERY
-  WITH T1 AS (SELECT P.id, P.name, P.email, P.days
+  SELECT P.id, P.name, P.email, P.days
   FROM projects_with_days() as P
   WHERE P.created < today
     AND P.type = ptype
   ORDER BY days, P.id -- technically not necessary but for correctness of definition
-  LIMIT n)
-  SELECT *
-  FROM T1
-  ORDER BY days DESC, id DESC;
+  LIMIT n;
 END;
 $$ LANGUAGE plpgsql;
 
