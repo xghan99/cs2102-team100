@@ -61,3 +61,25 @@ INSERT INTO Projects VALUES (4, '10@gmail.com', 'testtype', '2023-10-23', 'four_
 DELETE FROM Projects WHERE id = 0;
 CALL add_project(5, '12@gmail.com', 'testtype', '2021-01-01', 'Project 05', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
 -- should work again
+
+-- Test invalid inputs - should fail as a whole
+CALL add_user(NULL, '22name', 'cc22', NULL, '22street', '22num', '22zip', 'SG', 'BOTH');
+CALL add_user('23@gmail.com', NULL, 'cc23', NULL, '23street', '23num', '23zip', 'SG', 'BOTH');
+CALL add_user('24@gmail.com', '24name', NULL, NULL, '24street', '24num', '24zip', 'SG', 'BOTH');
+CALL add_user('25@gmail.com', '25name', 'cc25', NULL, NULL, '25num', '25zip', 'SG', 'BOTH');
+CALL add_user('26@gmail.com', '26name', 'cc26', NULL, '26street', NULL, '26zip', 'SG', 'BOTH');
+CALL add_user('27@gmail.com', '27name', 'cc27', NULL, '27street', '27num', NULL, 'SG', 'BOTH');
+CALL add_user('28@gmail.com', '28name', 'cc28', NULL, '28street', '28num', '28zip', NULL, 'BOTH');
+CALL add_user('29@gmail.com', '29name', 'cc29', NULL, '29street', '29num', '29zip', 'SG', NULL);
+
+CALL add_project("6", '12@gmail.com', 'testtype', '2021-01-01', 'Project 06', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(NULL, '12@gmail.com', 'testtype', '2021-01-01', 'Project 06', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(7, NULL, 'testtype', '2021-01-01', 'Project 07', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(8, '12@gmail.com', NULL, '2021-01-01', 'Project 08', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(9, '12@gmail.com', 'testtype', NULL, 'Project 09', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(10, '12@gmail.com', 'testtype', '2021-01-01', NULL, '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(11, '12@gmail.com', 'testtype', '2021-01-01', 'Project 11', NULL, 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(12, '12@gmail.com', 'testtype', '2021-01-01', 'Project 12', '2023-12-31', NULL, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(13, '12@gmail.com', 'testtype', '2021-01-01', 'Project 13', '2023-12-31', -10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(14, '12@gmail.com', 'testtype', '2021-01-01', 'Project 14', '2023-12-31', 10000, ARRAY['Gold', NULL, 'Trash'], ARRAY[10, 5, 3]);
+CALL add_project(15, '12@gmail.com', 'testtype', '2021-01-01', 'Project 15', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[-10, 5, 3]);
