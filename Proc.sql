@@ -4,12 +4,8 @@
 CREATE OR REPLACE FUNCTION check_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF ((SELECT COUNT(*)
-    FROM Users
-    WHERE
-      email NOT IN (SELECT email FROM Backers) AND
-      email NOT IN (SELECT email FROM Creators)
-    ) > 0) THEN
+  IF (NEW.email NOT IN (SELECT email FROM Backers) AND
+    NEW.email NOT IN (SELECT email FROM Creators)) THEN
   RAISE EXCEPTION 'There exists a user who is neither a backer nor a creator';
   ELSE
   RETURN NEW;
@@ -19,8 +15,9 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE TRIGGER block_user
-BEFORE INSERT ON Users
+CREATE CONSTRAINT TRIGGER block_user
+AFTER INSERT ON Users
+DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION check_user();
 
 
@@ -47,9 +44,7 @@ FOR EACH ROW EXECUTE FUNCTION check_amount();
 CREATE OR REPLACE FUNCTION check_project()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF ((SELECT COUNT(*)
-    FROM Projects
-    WHERE id NOT IN (SELECT id FROM Rewards)) > 0) THEN
+  IF ((SELECT COUNT(*) FROM Rewards WHERE id = NEW.id) = 0) THEN
   RAISE EXCEPTION 'There exists a project without any reward levels';
   ELSE
   RETURN NEW;
@@ -59,8 +54,9 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE TRIGGER block_project
-BEFORE INSERT ON Projects
+CREATE CONSTRAINT TRIGGER block_project
+AFTER INSERT ON Projects
+DEFERRABLE INITIALLY DEFERRED
 FOR EACH ROW EXECUTE FUNCTION check_project();
 
 

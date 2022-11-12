@@ -33,13 +33,11 @@ CALL add_user('20@gmail.com', '20name', 'cc20', NULL, '20street', '20num', '20zi
 
 -- Test Trigger 1
 INSERT INTO Users VALUES ('trig@gmail.com', 'trigname', 'cctr', NULL);
-CALL add_user('21@gmail.com', '21name', 'cc21', NULL, '21street', '21num', '21zip', 'SG', 'BOTH');
 -- unsuccessful, must add trigname to Backers and/or Creators as well
-INSERT INTO Users VALUES ('trig2@gmail.com', 'trigname2', 'cctr2', NULL);
--- unsuccessful, must add trigname to Backers and/or Creators as well
-DELETE FROM Users WHERE email = 'trig@gmail.com';
 CALL add_user('21@gmail.com', '21name', 'cc21', NULL, '21street', '21num', '21zip', 'SG', 'BOTH');
--- should work again
+-- works
+
+SELECT * FROM Users;
 
 -- Invalid project
 CALL add_project(11, '17@gmail.com', 'testtype', '2021-01-01', 'Project 01', '2022-12-31', 1000, ARRAY[]::TEXT[], ARRAY[]::NUMERIC[]);
@@ -53,14 +51,12 @@ CALL add_project(2, '12@gmail.com', 'testtype', '2021-01-01', 'Project 02', '202
 CALL add_project(3, '12@gmail.com', 'testtype', '2021-01-01', 'Project 03', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
 
 -- Test Trigger 3
-INSERT INTO Projects VALUES (0, '10@gmail.com', 'testtype', '2023-10-23', 'zero_project', '2024-06-30', 50000);
+INSERT INTO Projects VALUES (0, '10@gmail.com', 'testtype', '2023-10-23', 'trig_project', '2024-06-30', 50000);
+-- unsuccessful, must add reward level to project 0
 CALL add_project(4, '13@gmail.com', 'testtype', '2021-01-01', 'Project 04', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
--- unsuccessful, must add reward level to project 0
-INSERT INTO Projects VALUES (4, '10@gmail.com', 'testtype', '2023-10-23', 'four_project', '2024-06-30', 50000);
--- unsuccessful, must add reward level to project 0
-DELETE FROM Projects WHERE id = 0;
-CALL add_project(5, '12@gmail.com', 'testtype', '2021-01-01', 'Project 05', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
--- should work again
+-- works
+
+SELECT * FROM Projects;
 
 -- Test invalid inputs - should fail as a whole
 CALL add_user(NULL, '22name', 'cc22', NULL, '22street', '22num', '22zip', 'SG', 'BOTH');
@@ -83,3 +79,9 @@ CALL add_project(12, '12@gmail.com', 'testtype', '2021-01-01', 'Project 12', '20
 CALL add_project(13, '12@gmail.com', 'testtype', '2021-01-01', 'Project 13', '2023-12-31', -10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[10, 5, 3]);
 CALL add_project(14, '12@gmail.com', 'testtype', '2021-01-01', 'Project 14', '2023-12-31', 10000, ARRAY['Gold', NULL, 'Trash'], ARRAY[10, 5, 3]);
 CALL add_project(15, '12@gmail.com', 'testtype', '2021-01-01', 'Project 15', '2023-12-31', 10000, ARRAY['Gold', 'Silver', 'Trash'], ARRAY[-10, 5, 3]);
+
+SELECT * FROM Users;
+SELECT * FROM Projects;
+SELECT * FROM Creators;
+SELECT * FROM Backers;
+SELECT * FROM Rewards;
